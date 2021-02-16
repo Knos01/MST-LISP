@@ -38,7 +38,7 @@
   (let ((vertex-rep-list ()))
         (maphash (lambda (k v)
                    (if (equal (second k) graph-id)
-                       (push v vertex-rep-list))
+                       (push vertex-rep-list v))
                    ) *vertices*)
         vertex-rep-list ))
 
