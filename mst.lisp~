@@ -38,16 +38,10 @@
   (let ((vertex-rep-list ()))
         (maphash (lambda (k v)
                    (if (equal (second k) graph-id)
-                       (push vertex-rep-list v))
+                       (push v vertex-rep-list))
                    ) *vertices*)
         vertex-rep-list ))
 
-(defun hash-table-to-list (table)
-  (let ((my-list nil))
-    (maphash (lambda (key value)
-               (push value my-list))
-             table)
-    my-list))
 
 ;;;; new arc
 

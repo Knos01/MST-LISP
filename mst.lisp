@@ -18,71 +18,97 @@
 ;;;; new graph/1
 
 (defun new-graph (graph-id)
+ (if (null graph-id)
+      (format t "Errore: ~S non e' un nome valido" graph-id))
   (or (gethash graph-id *graphs*)
   (setf (gethash graph-id *graphs*) graph-id)))
 
 ;;;; delete graph/1
 
 (defun delete-graph (graph-id)
-  (remhash graph-id *graphs*))
+  (remhash graph-id *graphs*)
+  (maphash (lambda (k v) 
+             (if (equal (second k) graph-id) 
+                 (remhash k *vertices*))
+           ) *vertices*)
+  (maphash (lambda (k v) 
+             (if (equal (second k) graph-id) 
+                 (remhash k *arcs*))
+           ) *arcs*))
 
 ;;;; new vertex/2
 
 (defun new-vertex (graph-id vertex-id)
-  (setf (gethash (list 'vertex graph-id vertex-id) *vertices*) ;chiave
-        (list 'vertex graph-id vertex-id))) ;valore
+  (if (is-graph graph-id)
+  (setf (gethash (list 'vertex graph-id vertex-id) *vertices*)
+        (list 'vertex graph-id vertex-id))
+  (format t "Il grafo ~S non esiste" graph-id)))
 
 ;;;; graph vertices/1
 
 (defun graph-vertices (graph-id)
-  (let ((vertex-rep-list ()))
+  (if (not (is-graph graph-id))
+      (format t "Il grafo ~S non esiste" graph-id)
+    (let ((vertex-rep-list ()))
         (maphash (lambda (k v)
                    (if (equal (second k) graph-id)
                        (push v vertex-rep-list))
                    ) *vertices*)
-        vertex-rep-list ))
+        vertex-rep-list )))
 
-(defun hash-table-to-list (table)
-  (let ((my-list nil))
-    (maphash (lambda (key value)
-               (push value my-list))
-             table)
-    my-list))
 
-;;;; new arc
+;;;; new arc/4
 
-(defun new-arc (graph-id vertex-id vertex-id &optional weight)
-  (setf (gethash (list 'arc graph-id arc-id) *arcs*)
-  (list 'arc graph-id arc-id)))
+(defun new-arc (graph-id vertex-id-1 vertex-id-2 &optional (weight 1))
+  (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
+  (list 'arc graph-id vertex-id-1 vertex-id-2 weight ))
+  (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
+  (list 'arc graph-id vertex-id-2 vertex-id-1 weight )))
 
 (defun find-arc (g u v)
-  (or (gethash (list g u v) *arcs)
-      (gethash (list g v u) *arcs)))
+  (or (gethash (list g u v) *arcs*)
+      (gethash (list g v u) *arcs*)))
 
-; (equal (second (gethash '(vertex graphino v) *vertices*)) 'graphino)
+;;;; graph-arcs/1
+
+(defun graph-arcs (graph-id)
+  (let ((arc-rep-list ()))
+    (maphash (lambda (k v)
+               (if (equal (second k) graph-id)
+                   (push v arc-rep-list))
+               ) *arcs*)
+    arc-rep-list))
+
+;;;; graph-vertex-neighbours
+
+(defun graph-vertex-neighbors (graph-id vertex-id)
+  (let ((arc-rep-list ()))
+    (maphash (lambda (k v)
+               (if (and (equal (second k) graph-id)
+                        (equal (third k) vertex-id))
+                   (push v arc-rep-list))
+               ) *arcs*)
+    arc-rep-list))
+
+;;; graph-vertex-adjacent 
 
 
-;;;; graph arcs
-
-;;; cos'è vertex rep list????
-
-;;;; graph vertex neighbors
-
-
-;;;; graph vertex adjacent
-
-
-
-;;;; graph print
-
-(defvar a (make-array 10))
-
-(defun get-a (array i) (aref array i))
+(defun graph-vertex-adjacent (graph-id vertex-id)
+  (let ((vertex-rep-list ()))
+    (maphash (lambda (k v)
+               (if (and (equal (second k) graph-id)
+                        (equal (third k) vertex-id))
+                   (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
+               ) *arcs*)
+    vertex-rep-list))
 
 ;;; TEST
 
-(new-graph 'graphino)
-(new-vertex 'graphino 'v)
+(new-graph 'my-graph)
+(new-vertex 'my-graph 'v)
+(new-vertex 'my-graph 'u)
+(new-vertex 'my-graph 'z)
+(new-arc 'my-graph 'u 'v)
 
 ;;;; end of file -- mst.lisp
 
