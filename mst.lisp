@@ -60,10 +60,13 @@
 ;;;; new arc/4
 
 (defun new-arc (graph-id vertex-id-1 vertex-id-2 &optional (weight 1))
-  (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
-  (list 'arc graph-id vertex-id-1 vertex-id-2 weight ))
-  (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
-  (list 'arc graph-id vertex-id-2 vertex-id-1 weight )))
+  (cond ((and (is-graph graph-id) (= 1 1)) 
+    (progn 
+      (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
+            (list 'arc graph-id vertex-id-1 vertex-id-2 weight))
+      (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
+            (list 'arc graph-id vertex-id-2 vertex-id-1 weight))
+      ))))
 
 (defun find-arc (g u v)
   (or (gethash (list g u v) *arcs*)
@@ -108,7 +111,7 @@
 (new-vertex 'my-graph 'v)
 (new-vertex 'my-graph 'u)
 (new-vertex 'my-graph 'z)
-(new-arc 'my-graph 'u 'v)
+;(new-arc 'my-graph 'u 'v)
 
 ;;;; end of file -- mst.lisp
 
