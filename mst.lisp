@@ -6,7 +6,7 @@
 (defparameter *visited* (make-hash-table :test #'equal))
 (defparameter *vertex_keys* (make-hash-table :test #'equal))
 (defparameter *previous* (make-hash-table :test #'equal))
-(defparameter *heap* (make-hash-table :test #'equal))
+(defparameter *heaps* (make-hash-table :test #'equal))
 
 ;usare (inspect *hash-table*) per visualizzarne il contenuto
 
@@ -112,8 +112,16 @@
 
 (defun graph-print (graph-id)
   (if (is-graph graph-id)
-      (append (graph-vertices graph-id) (graph-arcs graph-id))))
+      (append (graph-vertices graph-id) (graph-arcs graph-id))
+    ))
 
+
+;;; new-heap
+
+(defun new-heap (heap-id &optional (capacity 42))
+  (or (gethash heap-id *heaps*)
+      (setf (gethash heap-id *heaps*)
+            (list 'heap heap-id 0 (make-array capacity)))))
 
 ;;; TEST
 
