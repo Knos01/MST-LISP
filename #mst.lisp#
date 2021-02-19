@@ -112,7 +112,8 @@
 
 (defun graph-print (graph-id)
   (if (is-graph graph-id)
-      (append (graph-vertices graph-id) (graph-arcs graph-id))))
+      (append (graph-vertices graph-id) (graph-arcs graph-id))
+    ))
 
 
 ;;; TEST

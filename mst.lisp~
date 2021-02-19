@@ -60,10 +60,13 @@
 ;;;; new arc/4
 
 (defun new-arc (graph-id vertex-id-1 vertex-id-2 &optional (weight 1))
-  (cond ((and (is-graph graph-id) (= 1 1)) 
-     (
+  (cond ((and (gethash (list 'vertex graph-id vertex-id-1) *vertices*)
+              (gethash (list 'vertex graph-id vertex-id-2) *vertices*)) 
+    (progn ;;provo con and
       (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
             (list 'arc graph-id vertex-id-1 vertex-id-2 weight))
+      (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
+            (list 'arc graph-id vertex-id-2 vertex-id-1 weight))
       ))))
 
 (defun find-arc (g u v)
@@ -73,35 +76,39 @@
 ;;;; graph-arcs/1
 
 (defun graph-arcs (graph-id)
-  (let ((arc-rep-list ()))
-    (maphash (lambda (k v)
-               (if (equal (second k) graph-id)
-                   (push v arc-rep-list))
-               ) *arcs*)
-    arc-rep-list))
+  (if (is-graph graph-id)
+      (let ((arc-rep-list ()))
+        (maphash (lambda (k v)
+                   (if (equal (second k) graph-id)
+                       (push v arc-rep-list))
+                   ) *arcs*)
+        arc-rep-list)))
 
 ;;;; graph-vertex-neighbours
 
 (defun graph-vertex-neighbors (graph-id vertex-id)
-  (let ((arc-rep-list ()))
-    (maphash (lambda (k v)
-               (if (and (equal (second k) graph-id)
-                        (equal (third k) vertex-id))
-                   (push v arc-rep-list))
-               ) *arcs*)
-    arc-rep-list))
+  (if (gethash (list 'vertex graph-id vertex-id) *vertices*)
+      (let ((arc-rep-list ()))
+        (maphash (lambda (k v)
+                   (if (and (equal (second k) graph-id)
+                            (equal (third k) vertex-id))
+                       (push v arc-rep-list))
+                   ) *arcs*)
+        arc-rep-list)))
 
 ;;; graph-vertex-adjacent 
 
-
 (defun graph-vertex-adjacent (graph-id vertex-id)
-  (let ((vertex-rep-list ()))
-    (maphash (lambda (k v)
-               (if (and (equal (second k) graph-id)
-                        (equal (third k) vertex-id))
-                   (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
-               ) *arcs*)
-    vertex-rep-list))
+  (if (gethash (list 'vertex graph-id vertex-id) *vertices*)
+      (let ((vertex-rep-list ()))
+        (maphash (lambda (k v)
+                   (if (and (equal (second k) graph-id)
+                            (equal (third k) vertex-id))
+                       (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
+                   ) *arcs*)
+        vertex-rep-list)))
+
+
 
 ;;; TEST
 
@@ -109,7 +116,8 @@
 (new-vertex 'my-graph 'v)
 (new-vertex 'my-graph 'u)
 (new-vertex 'my-graph 'z)
-;(new-arc 'my-graph 'u 'v)
+(new-arc 'my-graph 'u 'v)
+(new-arc 'my-graph 'u 'z)
 
 ;;;; end of file -- mst.lisp
 
