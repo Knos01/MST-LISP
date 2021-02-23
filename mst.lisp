@@ -123,6 +123,41 @@
       (setf (gethash heap-id *heaps*)
             (list 'heap heap-id 0 (make-array capacity)))))
 
+;;;; heap extract 
+
+(defun heap-extract (heap-id k v)
+  (new-heap)
+  (cond
+; l'heap è vuoto ritorno l'heap
+  ((= (funcall 'heap-size heap-id) 0) heap-id)
+; l'heap ha solo un nodo, tolgo il nodo e ritorno l'heap
+  ((= (funcall 'heap-size heap-id) 1)) 
+   ((remhash (v hashtable))(remhash (k hashtable)) 
+    heap-id)
+; altrimenti tolgo il nodo e chiamo la fix-heap  
+  (t ((remhash v hashtable) (remhash k hastable)) funcall 'fix-heap (heap-id k v)))
+
+;;;; fix heap
+
+(defun fix-heap (heap-id k v)
+(cond 
+ i = 0
+; prendo la radice di v
+  (vertex-previous (g v) root)
+; metto l'ultimo elemento nella radice
+ last = (setf (root 0))
+;trovo i 2 figli della radice
+ left = (+ (ash i 1) 1)
+ right = (+ (ash i 1) 2)
+; scelgo qual è il migliore 
+(setf
+ (cond
+  ((< leftk rightk) leftk)
+  (t (rightk))) newk)
+;richiamo la fix heap solo se v ha figli (???)
+ ((and (null left) (null right) heap-id))
+ (t (fix-heap (heap-id root newk)))))
+
 ;;; TEST
 
 (new-graph 'my-graph)
