@@ -19,9 +19,9 @@
 
 (defun new-graph (graph-id)
  (if (null graph-id)
-      (format t "Errore: ~S non e' un nome valido" graph-id))
+      (format t "Errore: ~S non e' un nome valido" graph-id)
   (or (gethash graph-id *graphs*)
-  (setf (gethash graph-id *graphs*) graph-id)))
+  (setf (gethash graph-id *graphs*) graph-id))))
 
 ;;;; delete graph/1
 
@@ -41,8 +41,8 @@
 (defun new-vertex (graph-id vertex-id)
   (if (is-graph graph-id)
   (setf (gethash (list 'vertex graph-id vertex-id) *vertices*)
-        (list 'vertex graph-id vertex-id))
-  (format t "Il grafo ~S non esiste" graph-id)))
+        (list 'vertex graph-id vertex-id)
+  (format t "Il grafo ~S non esiste" graph-id))))
 
 ;;;; graph vertices/1
 
