@@ -41,8 +41,8 @@
 (defun new-vertex (graph-id vertex-id)
   (if (is-graph graph-id)
   (setf (gethash (list 'vertex graph-id vertex-id) *vertices*)
-        (list 'vertex graph-id vertex-id)
-  (format t "Il grafo ~S non esiste" graph-id))))
+        (list 'vertex graph-id vertex-id))
+  (format t "Il grafo ~S non esiste" graph-id)))
 
 ;;;; graph vertices/1
 
@@ -116,12 +116,41 @@
     ))
 
 
-;;; new-heap
+;;;; new-heap
 
 (defun new-heap (heap-id &optional (capacity 42))
   (or (gethash heap-id *heaps*)
       (setf (gethash heap-id *heaps*)
             (list 'heap heap-id 0 (make-array capacity)))))
+
+;;;; is-heap
+
+(defun is-heap (heap-id)
+  (gethash heap-id *heaps*))
+
+;;;; heap-delete
+
+(defun heap-delete (heap-id)
+  (remhash heap-id *heaps*))
+
+;;;; heap-empty
+
+(defun heap-empty (heap-id)
+  (if (is-heap heap-id)
+      (= (third (gethash heap-id *heaps*)) 0)))
+
+;;;; heap-not-empty
+
+(defun heap-not-empty (heap-id)
+  (if (is-heap heap-id)
+      (> (third (gethash heap-id *heaps*)) 0)))
+
+;;;; heap-head
+
+(defun heap-head (heap-id)
+  (if (is-heap heap-id)
+      (aref (fourth (gethash heap-id *heaps*)) 0)))
+   
 
 ;;; TEST
 
@@ -131,8 +160,6 @@
 (new-vertex 'my-graph 'z)
 (new-arc 'my-graph 'u 'v)
 (new-arc 'my-graph 'u 'z)
+(new-heap 'my-heap)
 
 ;;;; end of file -- mst.lisp
-
-
-
