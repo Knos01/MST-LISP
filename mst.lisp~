@@ -7,6 +7,8 @@
 (defparameter *vertex_keys* (make-hash-table :test #'equal))
 (defparameter *previous* (make-hash-table :test #'equal))
 (defparameter *heaps* (make-hash-table :test #'equal))
+(defparameter *heap-entries* (make-hash-table :test #'equal)) 
+;;;; chiave (heap-id V) valore (K Pos Parent)
 
 ;usare (inspect *hash-table*) per visualizzarne il contenuto
 
@@ -41,8 +43,8 @@
 (defun new-vertex (graph-id vertex-id)
   (if (is-graph graph-id)
   (setf (gethash (list 'vertex graph-id vertex-id) *vertices*)
-        (list 'vertex graph-id vertex-id)
-  (format t "Il grafo ~S non esiste" graph-id))))
+        (list 'vertex graph-id vertex-id))
+  (format t "Il grafo ~S non esiste" graph-id)))
 
 ;;;; graph vertices/1
 
@@ -116,12 +118,102 @@
     ))
 
 
-;;; new-heap
+;;;; new-heap
 
 (defun new-heap (heap-id &optional (capacity 42))
   (or (gethash heap-id *heaps*)
       (setf (gethash heap-id *heaps*)
             (list 'heap heap-id 0 (make-array capacity)))))
+
+;;;; is-heap
+
+(defun is-heap (heap-id)
+  (gethash heap-id *heaps*))
+
+;;;; heap-delete
+
+(defun heap-delete (heap-id)
+  (remhash heap-id *heaps*))
+
+;;;; heap-empty
+
+(defun heap-empty (heap-id)
+  (if (is-heap heap-id)
+      (= (third (gethash heap-id *heaps*)) 0)))
+
+;;;; heap-not-empty
+
+(defun heap-not-empty (heap-id)
+  (if (is-heap heap-id)
+      (> (third (gethash heap-id *heaps*)) 0)))
+
+(defun actual-heap (heap-id)
+  (fourth (gethash heap-id *heaps*)))
+
+(defun heap-head (heap-id)
+  (if (is-heap heap-id)
+      (aref (actual-heap heap-id) 0)))
+
+(defun get-key (heap-id V)
+  (first (gethash (list heap-id V) *heap-entries*)))
+
+(defun get-pos (heap-id V)
+  (second (gethash (list heap-id V) *heap-entries*)))
+      
+
+(defun get-parent (heap-id pos)
+  (second (aref 
+           (actual-heap heap-id)
+           (max (floor (/ 
+                   (1- pos) 
+                   2)
+                  )
+                0)
+           )))
+
+(defun heap-size (heap-id)
+  (third (gethash heap-id *heaps*)))
+
+(defun incr-size (heap-id)
+  (setf 
+   (gethash heap-id *heaps*) 
+   (list 'heap heap-id (1+ (heap-size heap-id)) (actual-heap heap-id)))) 
+
+(defun decr-size (heap-id)
+  (setf
+   (gethash heap-id *heaps*)
+   (list 'heap heap-id (1- (heap-size heap-id)) (actual-heap heap-id))))
+
+
+;;;; heap-insert
+
+(defun heap-insert (heap-id K V)
+  (if (is-heap heap-id)
+      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice è dentro HEAP
+             (if (> (get-key heap-id V) K) ; se Kold > Knew
+                 (and 
+                  (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
+                       (list K (get-pos heap-id V) (get-parent heap-id (get-pos heap-id V))))
+                  ; mod actual-heap
+                  (setf (aref (actual-heap heap-id)
+                              (get-pos heap-id V)) 
+                        (list K V)) 
+                  (heapify heap-id (heap-size heap-id) (get-pos heap-id V)))))
+            (t (and ; aggiungo un nuovo heap entry 
+                (incr-size heap-id)
+                (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (list K V))
+                (setf (gethash (list heap-id V) *heap-entries*) ;aggiunge entry
+                      (list K (1- (heap-size heap-id)) (get-parent heap-id (1- (heap-size heap-id)))))
+                (heapify heap-id (heap-size heap-id) (1- (heap-size heap-id))))))))
+
+(defun heapify (heap-id s i)
+  (format t "heapify"))
+                
+
+
+   
+; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
+
 
 ;;; TEST
 
@@ -131,8 +223,6 @@
 (new-vertex 'my-graph 'z)
 (new-arc 'my-graph 'u 'v)
 (new-arc 'my-graph 'u 'z)
+(new-heap 'my-heap)
 
 ;;;; end of file -- mst.lisp
-
-
-

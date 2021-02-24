@@ -194,7 +194,7 @@
 
 (defun heap-insert (heap-id K V)
   (if (is-heap heap-id)
-      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice è dentro HEAP
+      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice Ã¨ dentro HEAP
              (if (> (get-key heap-id V) K) ; se Kold > Knew
                  (and ;qua devo sostituire con la heap-modify-key
                   (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
@@ -213,15 +213,16 @@
 
 (defun heapify (heap-id s i)
   (cond ((= (heap-size heap-id) 0) (format t "Caso base"))
-        ; se il figlio è minore di parent, swap
+        ; se il figlio Ã¨ minore di parent, swap
         ((< 
           (aref (actual-heap heap-id) i) ; figlio
           (aref (actual-heap heap-id) (get-pos-parent i)) ;padre
           )
          ;swap
-         ())
+         (swap i (get-pos-parent i))
         ((
 
+(
         
         
                 
