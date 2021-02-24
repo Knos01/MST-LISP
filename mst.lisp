@@ -194,7 +194,7 @@
 
 (defun heap-insert (heap-id K V)
   (if (is-heap heap-id)
-      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice è dentro HEAP
+      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice ï¿½ dentro HEAP
              (if (> (get-key heap-id V) K) ; se Kold > Knew
                  (and ;qua devo sostituire con la heap-modify-key
                   (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
@@ -213,7 +213,7 @@
 
 (defun heapify (heap-id s i)
   (cond ((= (heap-size heap-id) 0) (format t "Caso base"))
-        ; se il figlio è minore di parent, swap
+        ; se il figlio ï¿½ minore di parent, swap
         ((< 
           (aref (actual-heap heap-id) i) ; figlio
           (aref (actual-heap heap-id) (get-pos-parent i)) ;padre
@@ -230,6 +230,40 @@
    
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
 
+;;;; heap extract 
+
+(defun heap-extract (heap-id k v)
+  (new-heap)
+  (cond
+; l'heap ï¿½ vuoto ritorno l'heap
+  ((= (funcall 'heap-size heap-id) 0) heap-id)
+; l'heap ha solo un nodo, tolgo il nodo e ritorno l'heap
+  ((= (funcall 'heap-size heap-id) 1)) 
+   ((remhash (v hashtable))(remhash (k hashtable)) 
+    heap-id)
+; altrimenti tolgo il nodo e chiamo la fix-heap  
+  (t ((remhash v hashtable) (remhash k hastable)) funcall 'fix-heap (heap-id k v)))
+
+;;;; fix heap
+
+(defun fix-heap (heap-id k v)
+(cond 
+ i = 0
+; prendo la radice di v
+  (vertex-previous (g v) root)
+; metto l'ultimo elemento nella radice
+ last = (setf (root 0))
+;trovo i 2 figli della radice
+ left = (+ (ash i 1) 1)
+ right = (+ (ash i 1) 2)
+; scelgo qual ï¿½ il migliore 
+(setf
+ (cond
+  ((< leftk rightk) leftk)
+  (t (rightk))) newk)
+;richiamo la fix heap solo se v ha figli (???)
+ ((and (null left) (null right) heap-id))
+ (t (fix-heap (heap-id root newk)))))
 
 ;;; TEST
 
