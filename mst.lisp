@@ -232,15 +232,8 @@
       (or
        (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice e' dentro HEAP
               (if (> (get-key heap-id V) K) ; se Kold > Knew
-                  (and ;qua devo sostituire con la heap-modify-key
-                   (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
-                         (list K (get-pos heap-id V) (get-parent heap-id (get-pos heap-id V))))
-                  ; mod actual-heap
-                   (setf (aref (actual-heap heap-id)
-                               (get-pos heap-id V)) 
-                         (list K V)) 
-                   (heapify heap-id (heap-size heap-id) (get-pos heap-id V))
-                   )))
+                  (heap-modify-key heap-id K (get-key heap-id V) V)
+                ))
              (t (and ; aggiungo un nuovo heap entry 
                  (incr-size heap-id)
                  (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (list K V))
@@ -276,7 +269,18 @@
           (swap heap-id i (get-pos-parent i)))
          )) )
         
-
+(defun heap-modify-key (heap-id new-key old-key V)
+  (if (and (is-heap heap-id) (= (get-key heap-id V) old-key))
+      (and
+       (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
+             (list new-key (get-pos heap-id V) (get-parent heap-id (get-pos heap-id V))))
+        ; mod actual-heap
+       (setf (aref (actual-heap heap-id)
+                   (get-pos heap-id V)) 
+             (list new-key V)) 
+       (heapify heap-id (heap-size heap-id) (get-pos heap-id V))
+       )))
+      
         
 (defun swap (heap-id pos-child pos-parent)
   (let ((value-child (aref (actual-heap heap-id) pos-child)) ; (K V) child
@@ -329,16 +333,16 @@
      (fix-heap heap-id 0)))
 
 
-(defun fix-heap (heap-id i)
+;(defun fix-heap (heap-id i)
 
 ;; get children
 ;; compare children
 ;; if the lest  child's key is less than the right child's
 ;; setf in posizione i
-(if
-  ((< (first (list (aref (actual-heap heap-id)(floor(/ (+ i  1) 2)))))
-      (first (list (aref (actual-heap heap-id) (floor(/ (+ i 2) 2))))))(setf (aref (actual-heap heap-id) (floor (/ (+ i  1) 2))) (aref (actual-heap heap-id) i)))
-(setf (aref (actual-heap heap-id) (floor (/ (+ i 2) 2))) (aref (actual-heap heap-id) i))))
+;(if
+;  ((< (first (list (aref (actual-heap heap-id)(floor(/ (+ i  1) 2)))))
+;      (first (list (aref (actual-heap heap-id) (floor(/ (+ i 2) 2))))))(setf (aref (actual-heap heap-id) (floor (/ (+ i  1) 2))) (aref (actual-heap heap-id) i)))
+;(setf (aref (actual-heap heap-id) (floor (/ (+ i 2) 2))) (aref (actual-heap heap-id) i))))
 ;; ricorsivamente???
                
 ;;; TEST
