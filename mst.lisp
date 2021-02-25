@@ -312,41 +312,35 @@
    
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
 
+
 ;;;; heap extract 
 
-;(defun heap-extract (heap-id k v)
-;  (new-heap)
-;  (cond
-; l'heap  vuoto ritorno l'heap
-;  ((= (funcall 'heap-size heap-id) 0) heap-id)
-; l'heap ha solo un nodo, tolgo il nodo e ritorno l'heap
-;  ((= (funcall 'heap-size heap-id) 1)) 
-;   ((remhash (v hashtable))(remhash (k hashtable)) 
-;    heap-id)
-; altrimenti tolgo il nodo e chiamo la fix-heap  
-;  (t ((remhash v hashtable) (remhash k hastable)) funcall 'fix-heap (heap-id k v))))
+(defun heap-extract (heap-id)
+;; remove the smallest item
+;; take the last item of the heap and move it to the top
+  (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (aref (actual-heap heap-id) 0))
+;; decr-size
+  (decr-size heap-id)
+;; if the new heap-head is smaller than the left child call fix-heap
+  (if (< (first (heap-head heap-id))  (first (list (aref (actual-heap heap-id) 1))))      
+  (fix-heap heap-id 0))
+;; if the new heap-head is smaller than the right child
+  (if  (< (first (heap-head heap-id)) (first (list (aref (actual-heap heap-id) 2))))
+     (fix-heap heap-id 0)))
 
-;;;; fix heap
 
-;(defun fix-heap (heap-id k v)
-;(cond 
-; i = 0
-; prendo la radice di v
-;  (vertex-previous (g v) root)
-; metto l'ultimo elemento nella radice
-; last = (setf (root 0))
-;trovo i 2 figli della radice
-; left = (+ (ash i 1) 1)
-; right = (+ (ash i 1) 2)
-; scelgo qual  il migliore 
-;(setf
-; (cond
-;  ((< leftk rightk) leftk)
-;  (t (rightk))) newk)
-;richiamo la fix heap solo se v ha figli (???)
-; ((and (null left) (null right) heap-id))
-; (t (fix-heap (heap-id root newk)))))
+(defun fix-heap (heap-id i)
 
+;; get children
+;; compare children
+;; if the lest  child's key is less than the right child's
+;; setf in posizione i
+(if
+  ((< (first (list (aref (actual-heap heap-id)(floor(/ (+ i  1) 2)))))
+      (first (list (aref (actual-heap heap-id) (floor(/ (+ i 2) 2))))))(setf (aref (actual-heap heap-id) (floor (/ (+ i  1) 2))) (aref (actual-heap heap-id) i)))
+(setf (aref (actual-heap heap-id) (floor (/ (+ i 2) 2))) (aref (actual-heap heap-id) i))))
+;; ricorsivamente???
+               
 ;;; TEST
 
 (new-graph 'my-graph)
