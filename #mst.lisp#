@@ -226,6 +226,14 @@
    (gethash heap-id *heaps*)
    (list 'heap heap-id (1- (heap-size heap-id)) (actual-heap heap-id))))
 
+;;;; MST
+
+(defun mst-prim (graph-id source)
+  (if is-graph graph-id
+
+
+;;;; HEAP
+
 ;;;; heap-insert                              
 
 (defun heap-insert (heap-id K V)
@@ -318,9 +326,9 @@
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
 
 
-;;;; heap extract 
+;;;; heap extract - TODO DEVE RITORNARE (K V)
 
-(defun heap-extract (heap-id)
+(defun heap-extract (heap-id) 
 ;; remove the smallest item
 ;; take the last item of the heap and move it to the top
   (if (is-heap heap-id)
