@@ -28,23 +28,25 @@
 ;;;; delete graph/1
 
 (defun delete-graph (graph-id)
-  (remhash graph-id *graphs*)
-  (maphash (lambda (k v) 
-             (if (equal (second k) graph-id) 
-                 (remhash k *vertices*))
-           ) *vertices*)
-  (maphash (lambda (k v) 
-             (if (equal (second k) graph-id) 
-                 (remhash k *arcs*))
-           ) *arcs*))
+  (if (is-graph graph-id)
+      (and 
+       (remhash graph-id *graphs*)
+       (maphash (lambda (k v) 
+                  (if (equal (second k) graph-id) 
+                      (remhash k *vertices*))
+                  ) *vertices*)
+       (maphash (lambda (k v) 
+                  (if (equal (second k) graph-id) 
+                      (remhash k *arcs*))
+                  ) *arcs*))))
 
 ;;;; new vertex/2
 
 (defun new-vertex (graph-id vertex-id)
   (if (is-graph graph-id)
   (setf (gethash (list 'vertex graph-id vertex-id) *vertices*)
-        (list 'vertex graph-id vertex-id)
-  (format t "Il grafo ~S non esiste" graph-id))))
+        (list 'vertex graph-id vertex-id))
+  (format t "Il grafo ~S non esiste" graph-id)))
 
 ;;;; graph vertices/1
 
@@ -124,14 +126,6 @@
   (or (gethash heap-id *heaps*)
       (setf (gethash heap-id *heaps*)
             (list 'heap heap-id 0 (make-array capacity)))))
-;;;
-
-(defun heap-extract (heap-id k v)
-  (new-heap)
-  (cond
-  ((= (funcall 'heap-size heap-id) 1) heap-id)
-  ((= (funcall 'heap-size heap-id) 1) ((remhash (hashtable v))(remhash (k hashtable))))
-  (t ())
 
 ;;;; is-heap
 
@@ -141,7 +135,8 @@
 ;;;; heap-delete
 
 (defun heap-delete (heap-id)
-  (remhash heap-id *heaps*))
+  (if (is-heap heap-id)    
+      (remhash heap-id *heaps*)))
 
 ;;;; heap-empty
 
@@ -179,6 +174,9 @@
                 0)
            )))
 
+(defun get-pos-parent (pos)
+  (floor (/ (1- pos) 2)))
+
 (defun heap-size (heap-id)
   (third (gethash heap-id *heaps*)))
 
@@ -192,14 +190,13 @@
    (gethash heap-id *heaps*)
    (list 'heap heap-id (1- (heap-size heap-id)) (actual-heap heap-id))))
 
-
 ;;;; heap-insert
 
 (defun heap-insert (heap-id K V)
   (if (is-heap heap-id)
-      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice è dentro HEAP
+      (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice ï¿½ dentro HEAP
              (if (> (get-key heap-id V) K) ; se Kold > Knew
-                 (and 
+                 (and ;qua devo sostituire con la heap-modify-key
                   (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
                        (list K (get-pos heap-id V) (get-parent heap-id (get-pos heap-id V))))
                   ; mod actual-heap
@@ -212,17 +209,51 @@
                 (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (list K V))
                 (setf (gethash (list heap-id V) *heap-entries*) ;aggiunge entry
                       (list K (1- (heap-size heap-id)) (get-parent heap-id (1- (heap-size heap-id)))))
-                (heapify heap-id (heap-size heap-id) (1- (heap-size heap-id))))))))
+)))))               ; (heapify heap-id (heap-size heap-id) (1- (heap-size heap-id))))))))
 
+
+#||
 (defun heapify (heap-id s i)
-  (format t "heapify"))
-                
-
-
-   
+  (cond ((= (heap-size heap-id) 0) (format t "Caso base"))
+        ; se il figlio ï¿½ minore di parent, swap
+        ((< 
+          (aref (actual-heap heap-id) i) ; figlio
+          (aref (actual-heap heap-id) (get-pos-parent i)) ;padre
+          )
+         ;swap
+         ())
+        ((
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
+||#
+
+;;;; heap extract 
+
+(defun heap-extract (heap-id)
+;; remove the smallest item
+;; take the last item of the heap and move it to the top
+  (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (aref (actual-heap heap-id) 0))
+;; decr-size
+  (decr-size heap-id)
+;; if the new heap-head is smaller than the left child call fix-heap
+  (if (< (first (heap-head heap-id))  (first (list (aref (actual-heap heap-id) 1))))      
+  (fix-heap heap-id 0))
+;; if the new heap-head is smaller than the right child
+  (if  (< (first (heap-head heap-id)) (first (list (aref (actual-heap heap-id) 2))))
+     (fix-heap heap-id 0)))
 
 
+(defun fix-heap (heap-id i)
+
+;; get children
+;; compare children
+;; if the lest  child's key is less than the right child's
+;; setf in posizione i
+(if
+  ((< (first (list (aref (actual-heap heap-id)(floor(/ (+ i  1) 2)))))
+      (first (list (aref (actual-heap heap-id) (floor(/ (+ i 2) 2))))))(setf (aref (actual-heap heap-id) (floor (/ (+ i  1) 2))) (aref (actual-heap heap-id) i)))
+(setf (aref (actual-heap heap-id) (floor (/ (+ i 2) 2))) (aref (actual-heap heap-id) i))))
+;; ricorsivamente???
+               
 ;;; TEST
 
 (new-graph 'my-graph)
