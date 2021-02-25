@@ -4,7 +4,7 @@
 (defparameter *arcs* (make-hash-table :test #'equal))
 (defparameter *graphs* (make-hash-table :test #'equal))
 (defparameter *visited* (make-hash-table :test #'equal))
-(defparameter *vertex_keys* (make-hash-table :test #'equal))
+(defparameter *vertex-keys* (make-hash-table :test #'equal))
 (defparameter *previous* (make-hash-table :test #'equal))
 (defparameter *heaps* (make-hash-table :test #'equal))
 (defparameter *heap-entries* (make-hash-table :test #'equal)) 
@@ -226,6 +226,23 @@
    (gethash heap-id *heaps*)
    (list 'heap heap-id (1- (heap-size heap-id)) (actual-heap heap-id))))
 
+;;;; MST
+
+(defun mst-prim (graph-id source)
+  (if (is-graph graph-id)
+      (and
+       (reset)
+       (set-inf graph-id)
+       )))
+
+(defun set-inf (graph-id)
+  (maphash (lambda (k v)
+             (if (equal (second k) graph-id)
+                 (setf (gethash (graph-id v) *vertex-keys*)
+                   MOST-POSITIVE-DOUBLE-FLOAT)))
+           *vertices*))
+      
+
 ;;;; heap-insert                              
 
 (defun heap-insert (heap-id K V)
@@ -318,30 +335,34 @@
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
 
 
-;;;; heap extract 
+;;;; heap extract - TODO DEVE RITORNARE (K V)
 
-(defun heap-extract (heap-id)
+(defun heap-extract (heap-id) 
 ;; remove the smallest item
 ;; take the last item of the heap and move it to the top
-  (if (is-heap heap-id)
-      (and
-       (setf ; metto foglia nella radice
-        (aref (actual-heap heap-id) 0)  
-        (aref (actual-heap heap-id) (1- (heap-size heap-id))))
-       (setf ;cancello la foglia
-        (aref (actual-heap heap-id) (1- (heap-size heap-id)))
-        nil)
-       (setf ;sistemo la root in heap-entries
-        (gethash (list heap-id (second (aref (actual-heap heap-id) 0)))
-                 *heap-entries*)
-        (list (get-key heap-id (second (aref (actual-heap heap-id) 0)))
-              0
-              (second (aref (actual-heap heap-id) 0))))
-       (remhash (list heap-id (second (aref (actual-heap heap-id) (1- (heap-size heap-id)))))
-                *heap-entries*)
-      (decr-size heap-id)
-      (fix-heap heap-id (heap-size heap-id) 0)
-      )))
+  (if (and (is-heap heap-id) (heap-not-empty heap-id))
+      (let ((head (heap-head heap-id)))
+        (cond ((= (heap-size heap-id) 1) ;se la dim e' 1 cancello tutto
+               (and
+                (not (setf (aref (actual-heap heap-id) 0) nil))
+                (decr-size heap-id)
+                (clrhash *heap-entries*)
+                )
+               )
+              (t 
+               (and
+                (setf ; metto foglia nella radice
+                 (aref (actual-heap heap-id) 0)
+                 (aref (actual-heap heap-id) (1- (heap-size heap-id))))
+                ; eliminare la root in heap-entries
+                (remhash (list heap-id (second head))
+                         *heap-entries*)
+                 (not (setf ;cancello la foglia
+                 (aref (actual-heap heap-id) (1- (heap-size heap-id)))
+                 nil))
+                (decr-size heap-id)
+                (fix-heap heap-id (heap-size heap-id) 0)
+                ))) head)))
 
 
 ; fix-heap
@@ -351,38 +372,50 @@
         (kr (get-key heap-id (get-right-child-value heap-id i)))
         (km (first (aref (actual-heap heap-id) i)))
         )
-    (or
-     (cond ((and ;se kr e' il minore 
-           (not (null kr))
-           (= (min kl kr km) kr)
-           )
-           (and
-            (swap heap-id (get-pos-right-child i) i)
-            (fix-heap heap-id s (get-pos-right-child i))
-            )))
-     (cond ((and ;se kl e' il minore 
-             (not (null kr))
-             (= (min kl kr km) kl)
-             )
-            (and
-             (swap heap-id (get-pos-left-child i) i)
-             (fix-heap heap-id s (get-pos-left-child i))
-             )
-            ))
-     (cond ((< kl km) ; no figlio dx e kl e' il minore
-            (swap heap-id (get-pos-left-child i) i)))
-     (cond ((and
-             (<= km kl)
-             (string-lessp 
-              (get-left-child-value heap-id i) ; value figlio sx
-              (second (aref (actual-heap heap-id) i)) ;value padre
-              )
-             )
-            (swap heap-id (get-pos-left-child i) i)))
-     )))
+    (cond 
+     ((and ;se kr e' il minore 
+       (not (null kr))
+       (= (min kl kr km) kr)
+       )
+      (and
+       (swap heap-id (get-pos-right-child i) i)
+       (fix-heap heap-id s (get-pos-right-child i))
+       ))
+     ((and ;se kl e' il minore 
+       (not (null kr))
+       (= (min kl kr km) kl)
+       )
+      (and
+       (swap heap-id (get-pos-left-child i) i)
+       (fix-heap heap-id s (get-pos-left-child i))
+       )
+      )
+     ((and
+       (not (null kl))
+       (< kl km)
+       )
+          ; no figlio dx e kl e' il minore
+      (swap heap-id (get-pos-left-child i) i))
+     ((and
+       (not (null kl))
+       (<= km kl)
+       (string-lessp 
+        (get-left-child-value heap-id i) ; value figlio sx
+        (second (aref (actual-heap heap-id) i)) ;value padre
+        )
+       )
+      (swap heap-id (get-pos-left-child i) i)))
+     ))
            
 
-     
+; reset - TODO AGGIUNGO CHE CANCELLA ANCHE IL MST-ARC (QUALUNQUE ESSO SIA)
+(defun reset ()
+  (and
+   (clrhash *heaps*)
+   (clrhash *heap-entries*)
+   (clrhash *vertex-keys*)
+   (clrhash *previous*)
+   ))
                
                
                                                                               
@@ -396,5 +429,10 @@
 (new-arc 'my-graph 'u 'z)
 (new-heap 'my-heap)
 (heap-insert 'my-heap 3 'a)
+(heap-insert 'my-heap 1 'b)
+(heap-insert 'my-heap 6 'c)
+(heap-insert 'my-heap 5 'd)
+(heap-insert 'my-heap 2 'e)
+(heap-insert 'my-heap 4 'f)
 
 ;;;; end of file -- mst.lisp
