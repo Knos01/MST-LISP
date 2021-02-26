@@ -204,31 +204,6 @@ Questa è un heapifiy partendo dalla root.
 Questa funzione stampa sulla console lo stato interno dello heap heap-id.
 
 
-; heap-print2
+; recur-heap-print
 
 Funzione ausiliaria di heap-print
-
-
-; Legenda variabili
-
-capacity - capacita' dell'heap
-g - grafo
-graph-id - grafo
-heap-id - heap
-i - ???
-K - chiave
-new-key - nuova chiave
-old-key - vecchia chiave
-pos - posizione
-pos-child - posizione del nodo figlio
-pos-parent - poizione del nodo padre
-s - ???
-source - nodo di partenza per l'mst-prim
-u - ???
-v - ???
-V - valore
-vertex-id - vertice
-vertex-id-1 - vertice di partenza di un arco
-vertex-id-2 - vertice di arrivo di un arco
-weight - peso di un arco
-x - contatore per scorrere l'heap nell'heap-print2
