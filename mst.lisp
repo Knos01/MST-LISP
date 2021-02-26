@@ -406,7 +406,17 @@
        )
       (swap heap-id (get-pos-left-child i) i)))
      ))
-           
+
+;;;; heap-print
+
+(defun heap-print (heap-id)
+  (format t "~A ~%" heap-id)
+  (format t "SIZE ~A" (heap-size heap-id))
+  (heap-print2 heap-id 0))
+(defun heap-print2 (heap-id x)
+  (if (< x (heap-size heap-id))
+  (and (print (aref (actual-heap heap-id) x))
+  (heap-print2 heap-id (1+ x)))))              
 
 ; reset - TODO AGGIUNGO CHE CANCELLA ANCHE IL MST-ARC (QUALUNQUE ESSO SIA)
 (defun reset ()
