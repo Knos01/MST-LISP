@@ -1,3 +1,5 @@
+; Kobril Christian 856448, Cicalla Eleonora 851649
+
 ;;;; -*- Mode: Lisp -*-
 
 (defparameter *vertices* (make-hash-table :test #'equal))
@@ -70,9 +72,9 @@
   (cond ((and (gethash (list 'vertex graph-id vertex-id-1) *vertices*)
               (gethash (list 'vertex graph-id vertex-id-2) *vertices*)) 
     (and
-      (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
-            (list 'arc graph-id vertex-id-1 vertex-id-2 weight))
-      (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
+     (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
+           (list 'arc graph-id vertex-id-1 vertex-id-2 weight))
+     (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
             (list 'arc graph-id vertex-id-2 vertex-id-1 weight))
       ))))
 
@@ -114,7 +116,7 @@
         (maphash (lambda (k v)
                    (if (and (equal (second k) graph-id)
                             (equal (third k) vertex-id))
-                       (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
+                   (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
                    ) *arcs*)
         vertex-rep-list)))
 
@@ -392,15 +394,17 @@
 (defun heap-insert (heap-id K V)
   (if (is-heap heap-id)
       (or
-       (cond ((gethash (list heap-id V) *heap-entries*) ; se il vertice e' dentro HEAP
+       (cond ((gethash (list heap-id V) *heap-entries*)
               (if (> (get-key heap-id V) K) ; se Kold > Knew
                   (heap-modify-key heap-id K (get-key heap-id V) V)
                 ))
              (t (and ; aggiungo un nuovo heap entry 
-                 (incr-size heap-id)
-                 (setf (aref (actual-heap heap-id) (1- (heap-size heap-id))) (list K V))
-                 (setf (gethash (list heap-id V) *heap-entries*) ;aggiunge entry
-                       (list K (1- (heap-size heap-id)) (get-parent heap-id (1- (heap-size heap-id)))))
+               (incr-size heap-id)
+               (setf (aref (actual-heap heap-id) (1- (heap-size heap-id)))
+                     (list K V))
+               (setf (gethash (list heap-id V) *heap-entries*) ;aggiunge entry
+                       (list K (1- (heap-size heap-id)) 
+                             (get-parent heap-id (1- (heap-size heap-id)))))
                  (heapify heap-id (heap-size heap-id) (1- (heap-size heap-id)))
                  )))t)))
 
@@ -434,7 +438,8 @@
   (if (and (is-heap heap-id) (= (get-key heap-id V) old-key))
       (and
        (setf (gethash (list heap-id V) *heap-entries*) ; mod heap-entries
-             (list new-key (get-pos heap-id V) (get-parent heap-id (get-pos heap-id V))))
+             (list new-key (get-pos heap-id V) 
+                   (get-parent heap-id (get-pos heap-id V))))
         ; mod actual-heap
        (setf (aref (actual-heap heap-id)
                    (get-pos heap-id V)) 
@@ -452,10 +457,10 @@
            value-parent)
      (setf (aref (actual-heap heap-id) pos-parent) ; modifico parent
            value-child)
-     (setf (gethash (list heap-id (second value-child)) *heap-entries*) ; set new parent
-           (list (first value-child) pos-parent (get-parent heap-id pos-parent)))
-     (setf (gethash (list heap-id (second value-parent)) *heap-entries*) ;set new child
-           (list (first value-parent) pos-child (get-parent heap-id pos-child)))
+     (setf (gethash (list heap-id (second value-child)) *heap-entries*)
+         (list (first value-child) pos-parent (get-parent heap-id pos-parent)))
+     (setf (gethash (list heap-id (second value-parent)) *heap-entries*)
+         (list (first value-parent) pos-child (get-parent heap-id pos-child)))
      (fix-parent-children heap-id pos-parent)
      )))
 
@@ -463,12 +468,16 @@
 
 (defun fix-parent-children (heap-id pos-parent)
   (and
-   (if (not (null (gethash (list heap-id (get-left-child-value heap-id pos-parent)) *heap-entries*)))
+   (if (not (null (gethash (list 
+                            heap-id (get-left-child-value heap-id pos-parent))
+                           *heap-entries*)))
        (setf (third (gethash 
                      (list heap-id (get-left-child-value heap-id pos-parent)) 
                      *heap-entries*)) ;sistemo figlio sx
              (second (aref (actual-heap heap-id) pos-parent))))
-   (if (not (null (gethash (list heap-id (get-right-child-value heap-id pos-parent)) *heap-entries*)))
+   (if (not (null (gethash (list 
+                            heap-id (get-right-child-value heap-id pos-parent))
+                           *heap-entries*)))
        (setf (third (gethash
                      (list heap-id (get-right-child-value heap-id pos-parent))
                      *heap-entries*)) ;sistemo figlio dx
@@ -549,7 +558,17 @@
        )
       (swap heap-id (get-pos-left-child i) i)))
      ))
-           
+
+;;;; heap-print
+
+(defun heap-print (heap-id)
+  (format t "~A ~%" heap-id)
+  (format t "SIZE ~A" (heap-size heap-id))
+  (heap-print2 heap-id 0))
+(defun heap-print2 (heap-id x)
+  (if (< x (heap-size heap-id))
+  (and (print (aref (actual-heap heap-id) x))
+  (heap-print2 heap-id (1+ x)))))              
 
 ; reset
 (defun reset ()
