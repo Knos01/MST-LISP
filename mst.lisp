@@ -1,3 +1,5 @@
+; Kobril Christian 856448, Cicalla Eleonora 851649
+
 ;;;; -*- Mode: Lisp -*-
 
 (defparameter *vertices* (make-hash-table :test #'equal))
