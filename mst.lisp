@@ -8,6 +8,9 @@
 (defparameter *previous* (make-hash-table :test #'equal))
 (defparameter *heaps* (make-hash-table :test #'equal))
 (defparameter *heap-entries* (make-hash-table :test #'equal)) 
+(defparameter mst-arc (make-array 1 :fill-pointer 0 :adjustable t))
+;(defparameter *pre-order-mst* (make-array 1 :fill-pointer 0 :adjustable t))
+;vector-push-extend value array
 ;;;; chiave (heap-id V) valore (K Pos Parent)
 
 ;usare (inspect *hash-table*) per visualizzarne il contenuto
@@ -93,12 +96,15 @@
 (defun graph-vertex-neighbors (graph-id vertex-id)
   (if (gethash (list 'vertex graph-id vertex-id) *vertices*)
       (let ((arc-rep-list ()))
-        (maphash (lambda (k v)
-                   (if (and (equal (second k) graph-id)
-                            (equal (third k) vertex-id))
-                       (push v arc-rep-list))
-                   ) *arcs*)
-        arc-rep-list)))
+        (progn
+         (maphash (lambda (k v)
+                    (if (and (equal (second k) graph-id)
+                             (equal (third k) vertex-id))
+                        (push v arc-rep-list))
+                    ) *arcs*)
+         (setf arc-rep-list (sort (copy-list arc-rep-list) #'string-lessp :key 'fourth))
+         )
+         arc-rep-list)))
 
 ;;; graph-vertex-adjacent 
 
@@ -226,22 +232,160 @@
    (gethash heap-id *heaps*)
    (list 'heap heap-id (1- (heap-size heap-id)) (actual-heap heap-id))))
 
+(defun get-key-from-arc (arc)
+  (fifth arc))
+
+(defun get-value-from-arc (arc)
+  (fourth arc))
+
+
 ;;;; MST
 
 (defun mst-prim (graph-id source)
   (if (is-graph graph-id)
-      (and
+      (progn
        (reset)
        (set-inf graph-id)
-       )))
+       (setf (gethash (list graph-id source) *vertex-keys*)
+             0)
+       (new-heap 'heap)
+       (heap-insert-from-list 'heap graph-id (graph-vertex-neighbors graph-id source))
+       (recursive-mst-prim 'heap graph-id))
+    )
+  )
+
+; recursive-mst-prim
+
+(defun recursive-mst-prim (heap-id graph-id)
+  (cond ((heap-empty heap-id) ())
+        (t (let ((head (heap-head heap-id)))
+             (progn
+               (heap-extract heap-id) ;estraggo b
+               (setf (gethash (list graph-id (second head)) *vertex-keys*) ;metto il v come visitato
+                     (first head))
+               (find-min-arc graph-id (sort-arc (graph-vertex-neighbors graph-id (second head))) (second head))
+               (heap-insert-from-list heap-id graph-id (graph-vertex-neighbors graph-id (second head)))
+               (recursive-mst-prim heap-id graph-id)
+               )
+             ))))
+
+(defun find-min-arc (graph-id Lvs V)
+  (cond ((= (mst-vertex-key graph-id (get-value-from-arc (first Lvs))) 
+            MOST-POSITIVE-DOUBLE-FLOAT) ;se non e' visitato
+         (find-min-arc graph-id (rest Lvs) V))
+        (t (and
+            (setf (gethash (list graph-id V) *previous*) ;metto la key minima dei visitati
+                 (get-value-from-arc (first Lvs)))
+            () ;qua scrivo la previous ordered
+            )
+        )))
+
+(defun sort-arc (arcs)
+  (sort (copy-list arcs) #'< :key #'fifth)
+  )
+
+(defun sort-condition (a b)
+  (cond ((< (fifth a) (fifth b))
+         a)
+        ((< (fifth b) (fifth a))
+         b)
+        (
+         (and
+          (= (fifth a) (fifth b))
+          (string-lessp (fourth a) (fourth b))
+          )
+         a)
+        (
+         (and
+          (= (fifth a) (fifth b))
+          (string-lessp (fourth b) (fourth a))
+          )
+         b)
+        ))
+        
 
 (defun set-inf (graph-id)
   (maphash (lambda (k v)
              (if (equal (second k) graph-id)
-                 (setf (gethash (graph-id v) *vertex-keys*)
+                 (setf (gethash (list graph-id (third v)) *vertex-keys*)
                    MOST-POSITIVE-DOUBLE-FLOAT)))
            *vertices*))
+
+; ritorna pre-order-mst
+(defun mst-get (graph-id source)
+  (if (is-graph graph-id)
+      (let ((pre-order-mst (make-array 1 :fill-pointer 0 :adjustable t)))
+        (progn
+          (visit-mst graph-id source (get-mst-children graph-id source) pre-order-mst)
+          ) pre-order-mst
+        )))
+
+(defun visit-mst (graph-id parent vertexes pre-order-mst)
+  (cond ((null (first vertexes)) ())
+        (t
+         (progn
+           (if (not (find (first vertexes) pre-order-mst))
+               (vector-push-extend (first vertexes) pre-order-mst)) ;assert (S,V)
+           (cond ((null (get-mst-children graph-id (fourth (first vertexes)))) ;se non ha figli
+                  (visit-mst graph-id parent (rest vertexes) pre-order-mst))
+                 (t (visit-mst graph-id
+                               (fourth (first vertexes))
+                               (get-mst-children graph-id (fourth (first vertexes)))
+                               pre-order-mst)
+                    )
+                 )
+           (visit-mst graph-id parent (rest vertexes) pre-order-mst)
+           )
+         )
+        )
+  )
+           
+        
       
+      
+(defun get-mst-children (graph-id v-parent)
+  (let ((children ()))
+    (setf children 
+          (sort 
+           (remove-if-not #'is-children 
+                          (graph-vertex-neighbors graph-id v-parent)
+                          )
+           #'< :key 'fifth))
+          children))
+  
+(defun is-children (arc)
+  (equal (mst-previous (second arc) (fourth arc)) (third arc))
+  )
+
+(defun heap-insert-from-list (heap-id graph-id vs)
+  (cond ((= (heap-size heap-id) (first (array-dimensions (actual-heap heap-id))))
+         (format t "L'ARRAY E' PIENO")
+         )
+        ; se null finisco
+        ((null vs) ())
+        ;se K in vertex-key è inf aggiungo
+        ((= (mst-vertex-key graph-id (get-value-from-arc (first vs)))
+                           MOST-POSITIVE-DOUBLE-FLOAT)
+         (progn
+           (heap-insert heap-id 
+                        (get-key-from-arc (first vs)) 
+                        (get-value-from-arc (first vs))
+                        )
+           (heap-insert-from-list heap-id graph-id (rest vs))
+           ))
+        (t (heap-insert-from-list heap-id graph-id (rest vs)))
+        ))
+           
+
+(defun mst-vertex-key (graph-id V)
+  (if (gethash (list 'vertex graph-id V) *vertices*)
+      (gethash (list graph-id V) *vertex-keys*)
+  ))
+
+(defun mst-previous (graph-id V)
+  (if (gethash (list 'vertex graph-id V) *vertices*)
+      (gethash (list graph-id V) *previous*)
+    ))
 
 ;;;; heap-insert                              
 
@@ -261,7 +405,6 @@
                  )))t)))
 
 (defun heapify (heap-id s i)
-  (and
    (cond ((= (heap-size heap-id) 0) (format t "Caso base"))
         ; se il figlio e' minore di parent, swap
          ((< 
@@ -285,7 +428,7 @@
             )
            t)
           (swap heap-id i (get-pos-parent i)))
-         )) )
+         ))
         
 (defun heap-modify-key (heap-id new-key old-key V)
   (if (and (is-heap heap-id) (= (get-key heap-id V) old-key))
@@ -335,7 +478,7 @@
 ; USO ADJUST-ARRAY PER CAMBIARE LA DIMENSIONE
 
 
-;;;; heap extract - TODO DEVE RITORNARE (K V)
+;;;; heap extract
 
 (defun heap-extract (heap-id) 
 ;; remove the smallest item
@@ -408,7 +551,7 @@
      ))
            
 
-; reset - TODO AGGIUNGO CHE CANCELLA ANCHE IL MST-ARC (QUALUNQUE ESSO SIA)
+; reset
 (defun reset ()
   (and
    (clrhash *heaps*)
@@ -422,11 +565,52 @@
 ;;; TEST
 
 (new-graph 'my-graph)
-(new-vertex 'my-graph 'v)
-(new-vertex 'my-graph 'u)
-(new-vertex 'my-graph 'z)
-(new-arc 'my-graph 'u 'v)
-(new-arc 'my-graph 'u 'z)
+(new-vertex 'my-graph 'a)
+(new-vertex 'my-graph 'b)
+(new-vertex 'my-graph 'c)
+(new-vertex 'my-graph 'd)
+(new-vertex 'my-graph 'e)
+(new-vertex 'my-graph 'f)
+(new-vertex 'my-graph 'g)
+(new-arc 'my-graph 'a 'b 2)
+(new-arc 'my-graph 'a 'c 3)
+(new-arc 'my-graph 'a 'd 3)
+(new-arc 'my-graph 'b 'e 3)
+(new-arc 'my-graph 'b 'c 4)
+(new-arc 'my-graph 'c 'd 5)
+(new-arc 'my-graph 'c 'e 1)
+(new-arc 'my-graph 'c 'f 6)
+(new-arc 'my-graph 'd 'f 7)
+(new-arc 'my-graph 'f 'e 8)
+(new-arc 'my-graph 'f 'g 9)
+
+(new-graph 'graph)
+(new-vertex 'graph 'a)
+(new-vertex 'graph 'b)
+(new-vertex 'graph 'c)
+(new-vertex 'graph 'd)
+(new-vertex 'graph 'e)
+(new-vertex 'graph 'f)
+(new-vertex 'graph 'g)
+(new-vertex 'graph 'h)
+(new-vertex 'graph 'i)
+(new-arc 'graph 'a 'b 4)
+(new-arc 'graph 'a 'h 8)
+(new-arc 'graph 'b 'h 11)
+(new-arc 'graph 'b 'c 8)
+(new-arc 'graph 'c 'i 2)
+(new-arc 'graph 'c 'd 7)
+(new-arc 'graph 'c 'f 4)
+(new-arc 'graph 'd 'e 9)
+(new-arc 'graph 'd 'f 14)
+(new-arc 'graph 'e 'f 10)
+(new-arc 'graph 'f 'g 2)
+(new-arc 'graph 'g 'i 6)
+(new-arc 'graph 'g 'h 1)
+(new-arc 'graph 'i 'h 7)
+
+
+
 (new-heap 'my-heap)
 (heap-insert 'my-heap 3 'a)
 (heap-insert 'my-heap 1 'b)
