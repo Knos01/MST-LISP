@@ -412,7 +412,7 @@
 (defun heap-print (heap-id)
   (format t "~A ~%" heap-id)
   (format t "SIZE ~A" (heap-size heap-id))
-  (heap-printZ heap-id 0))
+  (heap-print2 heap-id 0))
 (defun heap-print2 (heap-id x)
   (if (< x (heap-size heap-id))
   (and (print (aref (actual-heap heap-id) x))
