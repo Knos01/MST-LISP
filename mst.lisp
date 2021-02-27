@@ -65,9 +65,11 @@
   (cond ((and (gethash (list 'vertex graph-id vertex-id-1) *vertices*)
               (gethash (list 'vertex graph-id vertex-id-2) *vertices*)) 
          (and
-          (setf (gethash (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
+          (setf (gethash 
+                 (list 'arc graph-id vertex-id-1 vertex-id-2 weight) *arcs*)
                 (list 'arc graph-id vertex-id-1 vertex-id-2 weight))
-          (setf (gethash (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
+          (setf (gethash 
+                 (list 'arc graph-id vertex-id-2 vertex-id-1 weight) *arcs*)
                 (list 'arc graph-id vertex-id-2 vertex-id-1 weight))
           ))))
 
@@ -112,7 +114,7 @@
         (maphash (lambda (k v)
                    (if (and (equal (second k) graph-id)
                             (equal (third k) vertex-id))
-                       (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
+                      (push (list 'vertex graph-id (fourth v)) vertex-rep-list))
                    ) *arcs*)
         vertex-rep-list)))
 
@@ -262,7 +264,7 @@
 ; heap-insert-from-list/3 dati degli archi vs inserisce nell'heap
 
 (defun heap-insert-from-list (heap-id graph-id vs)
-  (cond ((= (heap-size heap-id) (first (array-dimensions (actual-heap heap-id))))
+ (cond ((= (heap-size heap-id) (first (array-dimensions (actual-heap heap-id))))
          (format t "L'ARRAY E' PIENO")
          )
         ; se null finisco
@@ -477,7 +479,8 @@
        (setf (gethash (list graph-id source) *vertex-keys*)
              0)
        (new-heap 'heap)
-       (heap-insert-from-list 'heap graph-id (graph-vertex-neighbors graph-id source))
+       (heap-insert-from-list 'heap graph-id 
+       (graph-vertex-neighbors graph-id source))
        (recursive-mst-prim 'heap graph-id))
     )
   )
@@ -491,8 +494,11 @@
                (heap-extract heap-id) 
                (setf (gethash (list graph-id (second head)) *vertex-keys*)
                      (first head))
-               (find-min-arc graph-id (sort-arc (graph-vertex-neighbors graph-id (second head))) (second head))
-               (heap-insert-from-list heap-id graph-id (graph-vertex-neighbors graph-id (second head)))
+               (find-min-arc graph-id 
+               (sort-arc (graph-vertex-neighbors graph-id (second head))) 
+               (second head))
+               (heap-insert-from-list heap-id graph-id
+               (graph-vertex-neighbors graph-id (second head)))
                (recursive-mst-prim heap-id graph-id)
                )
              ))))
@@ -505,7 +511,7 @@
             MOST-POSITIVE-DOUBLE-FLOAT) ;se non e' visitato
          (find-min-arc graph-id (rest Lvs) V))
         (t (and
-            (setf (gethash (list graph-id V) *previous*) ;metto la key minima dei visitati
+            (setf (gethash (list graph-id V) *previous*)
                  (get-value-from-arc (first Lvs)))
             )
         )))
@@ -532,7 +538,9 @@
   (if (is-graph graph-id)
       (let ((pre-order-mst (make-array 1 :fill-pointer 0 :adjustable t)))
         (progn
-          (visit-mst graph-id source (get-mst-children graph-id source) pre-order-mst)
+          (visit-mst graph-id source 
+                     (get-mst-children graph-id source)
+                     pre-order-mst)
           ) pre-order-mst
         )))
 
@@ -548,7 +556,8 @@
                   (visit-mst graph-id parent (rest vertexes) pre-order-mst))
                  (t (visit-mst graph-id
                                (fourth (first vertexes))
-                               (get-mst-children graph-id (fourth (first vertexes)))
+                               (get-mst-children graph-id
+                                                 (fourth (first vertexes)))
                                pre-order-mst)
                     )
                  )
@@ -559,7 +568,8 @@
   )
            
            
-; get-mst-children/2 dato un parent ricava i figli all'interno del mst come lista di archi
+; get-mst-children/2 dato un parent ricava i figli
+; all'interno del mst come lista di archi
       
 (defun get-mst-children (graph-id v-parent)
   (let ((children ()))
